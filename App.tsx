@@ -70,10 +70,18 @@ const reducer = (state, action) => {
 const generateGame = () => {
   // TODO: randomize goal
   // TODO: randomize x, a, b
-  const goal = 70
-  const x = 20
-  const a = 3
-  const b = 66
+  // const goal = 70
+  // const x = 20
+  // const a = 3
+  // const b = 66
+
+  const goal = Math.floor(Math.random() * 98) + 2 // [2-98]
+  const x = Math.abs(Math.floor(Math.random() * Math.min(Math.abs(goal - 1), Math.abs(goal - 100))))
+  const a = Math.floor(Math.random() * 100) + 1 // [1-100]
+  const b = Math.floor(Math.random() * 100) + 1 // [1-100]
+
+
+
 
   const tiles = [goal - x, goal + x, a, b].map(num => ({id: uuidv4(), num, selected: false}))
   shuffleArray(tiles)
@@ -89,7 +97,8 @@ const generateGame = () => {
   }
 }
 const initialState = {
-  game: generateGame()
+  game: generateGame(), // TODO: change 'game' to 'level'
+  // TODO: points
 }
 
 const Tile = ({num, selected, handlePress}) => {
@@ -100,14 +109,25 @@ const Tile = ({num, selected, handlePress}) => {
   </TouchableOpacity>
 }
 
+type Game = {
+  id: number,
+  timer: number,
+  tiles: [
+    {id: number, num: number, selected: boolean}
+  ],
+  goal: number,
+  numberOfTilesSelected: number,
+  sum: number,
+  solved: boolean,
+}
+
 export default function App() {
   const [state, dispatch] = useReducer(reducer, initialState)
-  const {game} = state
-  const {id, timer, tiles, goal, solved, sum, numberOfTilesSelected} = game
+  const {id, timer, tiles, goal, solved, sum, numberOfTilesSelected} : Game = state.game
   let timerRef = useRef(null)
   // TODO: Harder: gotta pick more than two tiles
 
-  // TODO: Tick timer, stop when solved
+  // Tick timer
   useEffect(() => {
     timerRef.current = setInterval(() => {
       dispatch({type: 'TICK'})
@@ -116,6 +136,7 @@ export default function App() {
     return () => clearInterval(timerRef.current)
   }, [id]);
 
+  // Stop timer when solved
   useEffect(() => {
     if (solved) {
       clearInterval(timerRef.current)
@@ -133,7 +154,10 @@ export default function App() {
   return (
     <View style={styles.container}>
       <Text style={styles.instructionText}>Select the two tiles that average to your goal.</Text>
-      {solved ? <Text style={styles.currentAverage}>Yay you did it.</Text> : 
+      {solved ? <>
+        <Text style={styles.currentAverage}>Yay you did it.</Text>
+        <Button color={'hotpink'} onPress={() => dispatch({type: 'START_NEW_GAME'})} title="Start New Game"/>
+        </> : 
         <>
           <View style={styles.tileWrapper}>
             {tileComponents}
@@ -148,7 +172,7 @@ export default function App() {
         </>
       }
       <Text style={styles.currentAverage}>{timer}</Text>
-      <Button color={'hotpink'} onPress={() => dispatch({type: 'START_NEW_GAME'})} title="Start New Game"/>
+      
     </View>
   );
 }
