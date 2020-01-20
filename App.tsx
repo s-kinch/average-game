@@ -20,32 +20,36 @@ const reducer = (state, action) => {
     case 'SELECT_TILE': {
       const {num, i} = action
       const {game} = state
-      const {tiles, numberOfTilesSelected, currentAverage, goal} = game
-      const newCurrentAverage = currentAverage === null ? num : (currentAverage * numberOfTilesSelected + num) / (numberOfTilesSelected + 1)
+      const {tiles, numberOfTilesSelected, sum, goal} = game
+      const newNumberOfTilesSelected = numberOfTilesSelected + 1
+      const newSum = sum + num
+      
       return {
         ...state,
         game: {
           ...game,
           tiles: [...tiles.slice(0, i), {...tiles[i], selected: true}, ...tiles.slice(i + 1)],
-          numberOfTilesSelected: numberOfTilesSelected + 1,
-          currentAverage: newCurrentAverage,
-          solved: newCurrentAverage === goal
+          numberOfTilesSelected: newNumberOfTilesSelected,
+          sum: newSum,
+          solved: newSum / newNumberOfTilesSelected === goal
         }
       }
     }
     case 'DESELECT_TILE': {
       const {num, i} = action
       const {game} = state
-      const {tiles, numberOfTilesSelected, currentAverage, goal} = game
-      const newCurrentAverage = numberOfTilesSelected - 1 === 0 ? null : (currentAverage * numberOfTilesSelected - num) / (numberOfTilesSelected - 1)
+      const {tiles, numberOfTilesSelected, sum, goal} = game
+      const newNumberOfTilesSelected = numberOfTilesSelected - 1
+      const newSum = sum - num
+      
       return {
         ...state,
         game: {
           ...game,
           tiles: [...tiles.slice(0, i), {...tiles[i], selected: false}, ...tiles.slice(i + 1)],
           numberOfTilesSelected: numberOfTilesSelected - 1,
-          currentAverage: newCurrentAverage,
-          solved: newCurrentAverage === goal // TODO: Does this need to be here?
+          sum: newSum,
+          solved: (newSum / newNumberOfTilesSelected) === goal // TODO: Does this need to be here?
         }
       }
     }
@@ -70,7 +74,7 @@ const generateGame = () => {
     tiles,
     goal,
     numberOfTilesSelected: 0,
-    currentAverage: null,
+    sum: 0,
     solved: false,
   }
 }
@@ -87,13 +91,12 @@ const Tile = ({num, selected, handlePress}) => {
 }
 
 export default function App() {
-
-  // Where should selected state go?
-  // Harder: gotta pick more than two tiles
+  // TODO: Harder: gotta pick more than two tiles
+  // TODO: Tick timer, stop when solved
 
   const [state, dispatch] = useReducer(reducer, initialState)
   console.log(state)
-  const {game: {timer, tiles, goal, solved, currentAverage}} = state
+  const {game: {timer, tiles, goal, solved, sum, numberOfTilesSelected}} = state
   const tileComponents = tiles.map(({id, selected, num}, i) => <Tile 
     key={id} 
     num={num}
@@ -110,9 +113,11 @@ export default function App() {
       <View style={styles.goal}>
         <Text style={styles.tileText}>{goal}</Text>
       </View>
-      <Button onPress={() => dispatch({type: 'START_NEW_GAME'})} title="Start New Game"/>
-      <Text>CURRENT AVERAGE: {currentAverage}</Text>
-      <Text>SOLVED: {solved.toString()}</Text>
+      <Text style={styles.currentAverage}>CURRENT SUM: {sum}</Text>
+      <Text style={styles.currentAverage}>CURRENT # TILES SELECTED: {numberOfTilesSelected}</Text>
+      <Text style={styles.currentAverage}>CURRENT AVERAGE: {sum / numberOfTilesSelected}</Text>
+      <Text style={[styles.solvedText, (solved && styles.solvedTextSolved)]}>SOLVED: {solved.toString()}</Text>
+      <Button color={'hotpink'} onPress={() => dispatch({type: 'START_NEW_GAME'})} title="Start New Game"/>
     </View>
   );
 }
@@ -165,5 +170,18 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  currentAverage: {
+    fontSize: 30,
+    color: 'blue',
+    backgroundColor: 'yellow',
+  },
+  solvedText: {
+    fontSize: 45,
+    color: 'gray',
+  },
+  solvedTextSolved: {
+    color: 'lemonchiffon',
+    backgroundColor: 'forestgreen',
   },
 });
