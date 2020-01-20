@@ -1,4 +1,4 @@
-import React, {useReducer} from 'react';
+import React, {useReducer, useEffect, useRef} from 'react';
 import { StyleSheet, Text, View, Button, TouchableOpacity } from 'react-native';
 const uuidv4 = require('uuid/v4');
 
@@ -53,6 +53,15 @@ const reducer = (state, action) => {
         }
       }
     }
+    case 'TICK': {
+      return {
+        ...state,
+        game: {
+          ...state.game,
+          timer: state.game.timer + 1,
+        }
+      }
+    }
     default:
       return state
   }
@@ -70,6 +79,7 @@ const generateGame = () => {
   shuffleArray(tiles)
 
   return {
+    id: uuidv4(),
     timer: 0,
     tiles,
     goal,
@@ -91,12 +101,28 @@ const Tile = ({num, selected, handlePress}) => {
 }
 
 export default function App() {
-  // TODO: Harder: gotta pick more than two tiles
-  // TODO: Tick timer, stop when solved
-
   const [state, dispatch] = useReducer(reducer, initialState)
-  console.log(state)
-  const {game: {timer, tiles, goal, solved, sum, numberOfTilesSelected}} = state
+  const {game} = state
+  const {id, timer, tiles, goal, solved, sum, numberOfTilesSelected} = game
+  let timerRef = useRef(null)
+  // TODO: Harder: gotta pick more than two tiles
+
+  // TODO: Tick timer, stop when solved
+  useEffect(() => {
+    timerRef.current = setInterval(() => {
+      dispatch({type: 'TICK'})
+    }, 1000);
+
+    return () => clearInterval(timerRef.current)
+  }, [id]);
+
+  useEffect(() => {
+    if (solved) {
+      clearInterval(timerRef.current)
+    }
+  }, [solved])
+
+  
   const tileComponents = tiles.map(({id, selected, num}, i) => <Tile 
     key={id} 
     num={num}
@@ -107,16 +133,21 @@ export default function App() {
   return (
     <View style={styles.container}>
       <Text style={styles.instructionText}>Select the two tiles that average to your goal.</Text>
-      <View style={styles.tileWrapper}>
-        {tileComponents}
-      </View>
-      <View style={styles.goal}>
-        <Text style={styles.tileText}>{goal}</Text>
-      </View>
-      <Text style={styles.currentAverage}>CURRENT SUM: {sum}</Text>
-      <Text style={styles.currentAverage}>CURRENT # TILES SELECTED: {numberOfTilesSelected}</Text>
-      <Text style={styles.currentAverage}>CURRENT AVERAGE: {sum / numberOfTilesSelected}</Text>
-      <Text style={[styles.solvedText, (solved && styles.solvedTextSolved)]}>SOLVED: {solved.toString()}</Text>
+      {solved ? <Text style={styles.currentAverage}>Yay you did it.</Text> : 
+        <>
+          <View style={styles.tileWrapper}>
+            {tileComponents}
+          </View>
+          <View style={styles.goal}>
+            <Text style={styles.tileText}>{goal}</Text>
+          </View>
+          <Text style={styles.currentAverage}>CURRENT SUM: {sum}</Text>
+          <Text style={styles.currentAverage}>CURRENT # TILES SELECTED: {numberOfTilesSelected}</Text>
+          <Text style={styles.currentAverage}>CURRENT AVERAGE: {sum / numberOfTilesSelected}</Text>
+          <Text style={[styles.solvedText, (solved && styles.solvedTextSolved)]}>SOLVED: {solved.toString()}</Text>
+        </>
+      }
+      <Text style={styles.currentAverage}>{timer}</Text>
       <Button color={'hotpink'} onPress={() => dispatch({type: 'START_NEW_GAME'})} title="Start New Game"/>
     </View>
   );
