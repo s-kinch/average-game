@@ -53,15 +53,6 @@ const reducer = (state, action) => {
         }
       }
     }
-    case 'TICK': {
-      return {
-        ...state,
-        game: {
-          ...state.game,
-          timer: state.game.timer + 1,
-        }
-      }
-    }
     default:
       return state
   }
@@ -88,7 +79,6 @@ const generateGame = () => {
 
   return {
     id: uuidv4(),
-    timer: 0,
     tiles,
     goal,
     numberOfTilesSelected: 0,
@@ -111,7 +101,6 @@ const Tile = ({num, selected, handlePress}) => {
 
 type Game = {
   id: number,
-  timer: number,
   tiles: [
     {id: number, num: number, selected: boolean}
   ],
@@ -123,26 +112,8 @@ type Game = {
 
 export default function App() {
   const [state, dispatch] = useReducer(reducer, initialState)
-  const {id, timer, tiles, goal, solved, sum, numberOfTilesSelected} : Game = state.game
-  let timerRef = useRef(null)
+  const {id, tiles, goal, solved, sum, numberOfTilesSelected} : Game = state.game
   // TODO: Harder: gotta pick more than two tiles
-
-  // Tick timer
-  useEffect(() => {
-    timerRef.current = setInterval(() => {
-      dispatch({type: 'TICK'})
-    }, 1000);
-
-    return () => clearInterval(timerRef.current)
-  }, [id]);
-
-  // Stop timer when solved
-  useEffect(() => {
-    if (solved) {
-      clearInterval(timerRef.current)
-    }
-  }, [solved])
-
   
   const tileComponents = tiles.map(({id, selected, num}, i) => <Tile 
     key={id} 
@@ -153,78 +124,105 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.instructionText}>Select the two tiles that average to your goal.</Text>
       {solved ? <>
         <Text style={styles.currentAverage}>Yay you did it.</Text>
         <Button color={'hotpink'} onPress={() => dispatch({type: 'START_NEW_GAME'})} title="Start New Game"/>
         </> : 
         <>
+          <View style={styles.instructionWrapper}>
+            <Text style={styles.instructionText}>Select the two tiles that average to your goal:</Text>
+            <View style={styles.goalWrapper}>
+              <View style={[styles.goal, styles.tile]}>
+                <Text style={[styles.tileText, styles.goalText]}>{goal}</Text>
+              </View>
+            </View>
+          </View>
           <View style={styles.tileWrapper}>
             {tileComponents}
           </View>
-          <View style={styles.goal}>
-            <Text style={styles.tileText}>{goal}</Text>
-          </View>
-          <Text style={styles.currentAverage}>CURRENT SUM: {sum}</Text>
-          <Text style={styles.currentAverage}>CURRENT # TILES SELECTED: {numberOfTilesSelected}</Text>
-          <Text style={styles.currentAverage}>CURRENT AVERAGE: {sum / numberOfTilesSelected}</Text>
-          <Text style={[styles.solvedText, (solved && styles.solvedTextSolved)]}>SOLVED: {solved.toString()}</Text>
         </>
       }
-      <Text style={styles.currentAverage}>{timer}</Text>
-      
+      <View style={styles.bottomThing}>
+
+      </View>
     </View>
   );
+}
+
+const palette = {
+  zanah: (a: number) => `rgba(223,237,211,${a})`,
+  astronaut: (a: number) => `rgba(36,70,109,${a})`,
+  persimmon: (a: number) => `rgba(229,99,66,${a})`,
+  white: (a: number) => `rgba(255,255,255,${a})`,
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'aqua',
+    backgroundColor: palette.zanah(1),
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
+  instructionWrapper: {
+    flex: 2,
+    display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: palette.astronaut(1),
+    width: '100%',
+    shadowColor: palette.astronaut(1),
+    shadowOffset: { width: 1, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 3,
   },
   instructionText: {
-    fontSize: 45,
-    color: 'fuchsia',
-    margin: 10,
-    backgroundColor: 'violet',
+    // flex: 1,
+    fontSize: 30,
+    color: palette.zanah(1),
+    marginTop: 70,
+    // backgroundColor: 'orange',
   },
   tileWrapper: {
+    flex: 3,
     display: 'flex',
     flexWrap: 'wrap',
     flexDirection: 'row',
     justifyContent: 'center',
+    alignContent: 'center',
     width: '100%',
-    backgroundColor: 'teal',
   },
   tile: {
-    backgroundColor: 'hotpink',
+    backgroundColor: palette.white(0.3),
     width: 120,
     height: 120,
     margin: 10,
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 10,
   },
   tileSelected: {
-    backgroundColor: 'yellow',
+    backgroundColor: palette.persimmon(1),
   },
   tileText: {
     fontSize: 75,
-    color: 'lime',
+    color: palette.astronaut(1),
   },
   tileTextSelected: {
-    color: 'white',
+    color: palette.white(0.9),
+  },
+  goalWrapper: {
+    marginBottom: 20,
   },
   goal: {
-    backgroundColor: 'purple',
     margin: 10,
     display: 'flex',
-    // flexDirection: 'row',
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  goalText: {
+    color: palette.zanah(1),
   },
   currentAverage: {
     fontSize: 30,
@@ -238,5 +236,14 @@ const styles = StyleSheet.create({
   solvedTextSolved: {
     color: 'lemonchiffon',
     backgroundColor: 'forestgreen',
+  },
+  bottomThing: {
+    backgroundColor: palette.persimmon(0.8),
+    width: '100%',
+    flex: 1,
+    shadowColor: palette.astronaut(1),
+    shadowOffset: { width: -1, height: -2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 3,
   },
 });
