@@ -1,9 +1,9 @@
 import React, {useReducer, useRef, useEffect} from 'react';
 import { StyleSheet, Text, View, Button, TouchableOpacity, Animated } from 'react-native';
-const uuidv4 = require('uuid/v4');
+import uuidv4 from 'uuid/v4';
 
 // https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
-function shuffleArray(array) {
+function shuffleArray(array: Array<Object>) {
   for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [array[i], array[j]] = [array[j], array[i]];
@@ -12,22 +12,22 @@ function shuffleArray(array) {
 
 const reducer = (state, action) => {
   switch(action.type){
-    case 'START_NEW_GAME': 
+    case 'START_NEW_LEVEL': 
       return {
         ...state,
-        game: generateGame()
+        level: generateLevel()
       }
     case 'SELECT_TILE': {
       const {num, i} = action
-      const {game} = state
-      const {tiles, numberOfTilesSelected, sum, goal} = game
+      const {level} = state
+      const {tiles, numberOfTilesSelected, sum, goal} = level
       const newNumberOfTilesSelected = numberOfTilesSelected + 1
       const newSum = sum + num
       
       return {
         ...state,
-        game: {
-          ...game,
+        level: {
+          ...level,
           tiles: [...tiles.slice(0, i), {...tiles[i], selected: true}, ...tiles.slice(i + 1)],
           numberOfTilesSelected: newNumberOfTilesSelected,
           sum: newSum,
@@ -37,15 +37,15 @@ const reducer = (state, action) => {
     }
     case 'DESELECT_TILE': {
       const {num, i} = action
-      const {game} = state
-      const {tiles, numberOfTilesSelected, sum, goal} = game
+      const {level} = state
+      const {tiles, numberOfTilesSelected, sum, goal} = level
       const newNumberOfTilesSelected = numberOfTilesSelected - 1
       const newSum = sum - num
       
       return {
         ...state,
-        game: {
-          ...game,
+        level: {
+          ...level,
           tiles: [...tiles.slice(0, i), {...tiles[i], selected: false}, ...tiles.slice(i + 1)],
           numberOfTilesSelected: numberOfTilesSelected - 1,
           sum: newSum,
@@ -58,21 +58,12 @@ const reducer = (state, action) => {
   }
 }
 
-const generateGame = () => {
-  // TODO: randomize goal
-  // TODO: randomize x, a, b
-  // const goal = 70
-  // const x = 20
-  // const a = 3
-  // const b = 66
-
+const generateLevel = () => {
+  // TODO: Harder: gotta pick more than two tiles
   const goal = Math.floor(Math.random() * 98) + 2 // [2-98]
   const x = Math.abs(Math.floor(Math.random() * Math.min(Math.abs(goal - 1), Math.abs(goal - 100))))
   const a = Math.floor(Math.random() * 100) + 1 // [1-100]
   const b = Math.floor(Math.random() * 100) + 1 // [1-100]
-
-
-
 
   const tiles = [goal - x, goal + x, a, b].map(num => ({id: uuidv4(), num, selected: false}))
   shuffleArray(tiles)
@@ -86,9 +77,9 @@ const generateGame = () => {
     solved: false,
   }
 }
+
 const initialState = {
-  game: generateGame(), // TODO: change 'game' to 'level'
-  // TODO: points
+  level: generateLevel(),
 }
 
 const Tile = ({num, selected, handlePress}) => {
@@ -99,7 +90,7 @@ const Tile = ({num, selected, handlePress}) => {
   </TouchableOpacity>
 }
 
-type Game = {
+type Level = {
   id: number,
   tiles: [
     {id: number, num: number, selected: boolean}
@@ -112,7 +103,7 @@ type Game = {
 
 export default function App() {
   const [state, dispatch] = useReducer(reducer, initialState)
-  const {id, tiles, goal, solved, sum, numberOfTilesSelected} : Game = state.game
+  const {id, tiles, goal, solved, sum, numberOfTilesSelected} : Level = state.level
   const goalColor = useRef(new Animated.Value(0))
 
   useEffect(() => {
@@ -121,15 +112,13 @@ export default function App() {
         duration: 300,
         toValue: 1
       }).start()
-    } else { // starting new game
+    } else { // starting new level
       Animated.timing(goalColor.current, {
         duration: 300,
         toValue: 0
       }).start()
     }
   }, [solved, id])
-
-  // TODO: Harder: gotta pick more than two tiles
   
   const tileComponents = tiles.map(({id, selected, num}, i) => <Tile 
     key={id} 
@@ -162,7 +151,7 @@ export default function App() {
       <View style={styles.bottomThing}>
       {solved && <>
         <Text style={styles.currentAverage}>Yay</Text>
-        <Button color={'hotpink'} onPress={() => dispatch({type: 'START_NEW_GAME'})} title="Start New Game"/>
+        <Button color={'hotpink'} onPress={() => dispatch({type: 'START_NEW_LEVEL'})} title="Next Level"/>
       </>}
       </View>
     </View>
