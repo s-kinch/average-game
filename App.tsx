@@ -1,5 +1,5 @@
-import React, {useReducer, useEffect, useRef} from 'react';
-import { StyleSheet, Text, View, Button, TouchableOpacity } from 'react-native';
+import React, {useReducer, useRef, useEffect} from 'react';
+import { StyleSheet, Text, View, Button, TouchableOpacity, Animated } from 'react-native';
 const uuidv4 = require('uuid/v4');
 
 // https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
@@ -113,6 +113,22 @@ type Game = {
 export default function App() {
   const [state, dispatch] = useReducer(reducer, initialState)
   const {id, tiles, goal, solved, sum, numberOfTilesSelected} : Game = state.game
+  const goalColor = useRef(new Animated.Value(0))
+
+  useEffect(() => {
+    if (solved) { // solved goes from false to true
+      Animated.timing(goalColor.current, {
+        duration: 300,
+        toValue: 1
+      }).start()
+    } else { // starting new game
+      Animated.timing(goalColor.current, {
+        duration: 300,
+        toValue: 0
+      }).start()
+    }
+  }, [solved, id])
+
   // TODO: Harder: gotta pick more than two tiles
   
   const tileComponents = tiles.map(({id, selected, num}, i) => <Tile 
@@ -127,10 +143,16 @@ export default function App() {
         <>
           <View style={styles.instructionWrapper}>
             <Text style={styles.instructionText}>Select the two tiles that average to your goal:</Text>
-            <View style={styles.goalWrapper}>
-              <View style={[styles.goal, styles.tile]}>
-                <Text style={[styles.tileText, styles.goalText]}>{goal}</Text>
-              </View>
+            <View style={[styles.goalWrapper]}>
+              <Animated.View style={[styles.goal, styles.tile, {backgroundColor: goalColor.current.interpolate({
+                inputRange: [0, 1],
+                outputRange: [palette.white(0.3), palette.persimmon(1)]
+              })}]}>
+                <Animated.Text style={[styles.tileText, styles.goalText, {color: goalColor.current.interpolate({
+                inputRange: [0, 1],
+                outputRange: [palette.zanah(1), palette.white(0.9)]
+              })}]}>{goal}</Animated.Text>
+              </Animated.View>
             </View>
           </View>
           <View style={styles.tileWrapper} pointerEvents={solved ? 'none' : 'auto'}>
@@ -139,7 +161,7 @@ export default function App() {
         </>
       <View style={styles.bottomThing}>
       {solved && <>
-        <Text style={styles.currentAverage}>Yay you did it.</Text>
+        <Text style={styles.currentAverage}>Yay</Text>
         <Button color={'hotpink'} onPress={() => dispatch({type: 'START_NEW_GAME'})} title="Start New Game"/>
       </>}
       </View>
@@ -219,6 +241,9 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  goalSolved: {
+    backgroundColor: palette.persimmon(1),
   },
   goalText: {
     color: palette.zanah(1),
