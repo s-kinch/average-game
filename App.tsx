@@ -124,10 +124,6 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      {solved ? <>
-        <Text style={styles.currentAverage}>Yay you did it.</Text>
-        <Button color={'hotpink'} onPress={() => dispatch({type: 'START_NEW_GAME'})} title="Start New Game"/>
-        </> : 
         <>
           <View style={styles.instructionWrapper}>
             <Text style={styles.instructionText}>Select the two tiles that average to your goal:</Text>
@@ -137,13 +133,15 @@ export default function App() {
               </View>
             </View>
           </View>
-          <View style={styles.tileWrapper}>
+          <View style={styles.tileWrapper} pointerEvents={solved ? 'none' : 'auto'}>
             {tileComponents}
           </View>
         </>
-      }
       <View style={styles.bottomThing}>
-
+      {solved && <>
+        <Text style={styles.currentAverage}>Yay you did it.</Text>
+        <Button color={'hotpink'} onPress={() => dispatch({type: 'START_NEW_GAME'})} title="Start New Game"/>
+      </>}
       </View>
     </View>
   );
@@ -176,11 +174,12 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   instructionText: {
-    // flex: 1,
     fontSize: 30,
     color: palette.zanah(1),
     marginTop: 70,
-    // backgroundColor: 'orange',
+    marginRight: 10,
+    marginLeft: 10,
+    marginBottom: 10,
   },
   tileWrapper: {
     flex: 3,
