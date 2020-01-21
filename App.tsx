@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, Button, TouchableOpacity, Animated } from 'reac
 import uuidv4 from 'uuid/v4';
 
 // https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
-function shuffleArray(array: Array<Object>) {
+function shuffleArray(array: Array<any>) {
   for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [array[i], array[j]] = [array[j], array[i]];
@@ -150,8 +150,10 @@ export default function App() {
         </>
       <View style={styles.bottomThing}>
       {solved && <>
-        <Text style={styles.currentAverage}>Yay</Text>
-        <Button color={'hotpink'} onPress={() => dispatch({type: 'START_NEW_LEVEL'})} title="Next Level"/>
+        <Text style={styles.yay}>Yay!</Text>
+        <TouchableOpacity style={styles.nextButton} onPress={() => dispatch({type: 'START_NEW_LEVEL'})}>
+          <Text style={styles.nextButtonText}>Next Level</Text>
+        </TouchableOpacity>
       </>}
       </View>
     </View>
@@ -237,11 +239,6 @@ const styles = StyleSheet.create({
   goalText: {
     color: palette.zanah(1),
   },
-  currentAverage: {
-    fontSize: 30,
-    color: 'blue',
-    backgroundColor: 'yellow',
-  },
   solvedText: {
     fontSize: 45,
     color: 'gray',
@@ -258,5 +255,22 @@ const styles = StyleSheet.create({
     shadowOffset: { width: -1, height: -2 },
     shadowOpacity: 0.5,
     shadowRadius: 3,
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-evenly'
+  },
+  yay: {
+    fontSize: 20,
+    color: palette.white(0.9),
+  },
+  nextButton: {
+    borderRadius: 10,
+    backgroundColor: palette.white(0.3),
+  },
+  nextButtonText: {
+    fontSize: 30,
+    color: palette.zanah(1),
+    padding: 10,
   },
 });
